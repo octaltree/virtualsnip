@@ -30,6 +30,15 @@ function! virtualsnip#view#refresh(value) abort
     call nvim_buf_clear_namespace(0, s:virtualsnip_id, 0, -1)
     return
   endif
+  " TODO: Is it faster to batch rewrite with c than to use vim script to diff and update?
+  for action in s:diff(a:value)
+    if action.op ==# 'delete' || action.op ==# 'update'
+      call nvim_buf_clear_namespace(0, s:virtualsnip_id, action.line, action.line)
+    endif
+    if action.op ==# 'insert' || action.op ==# 'update'
+      call nvim_buf_set_virtual_text(0, s:virtualsnip_id, action.line, action.chunks, {})
+    endif
+  endfor
 endfunction
 
 function! s:value_is_blank(value) abort
@@ -47,4 +56,38 @@ function! s:value_is_changed(value) abort
     let s:last_value = a:value
     return v:false
   endif
+endfunction
+
+let s:shown = {}
+" return: action
+" action: {
+"   op: str,
+"   line: index,
+"   chunks
+" }
+function! s:diff(value) abort
+  let res = []
+  let next = s:value_to_dict()
+  for t in keys(s:shown)
+    if !has_key(next, t.line)
+      call add(res, {'op': 'delete', 'line': t.line, 'chunks': t.chunks})
+    endif
+  endfor
+  for t in a:value.texts
+    if !has_key(s:shown, t.line)
+      call add(res, {'op': 'insert', 'line': t.line, 'chunks': t.chunks})
+    elseif s:shown[t.line] != t.chunks
+      call add(res, {'op': 'update', 'line': t.line, 'chunks': t.chunks})
+    endif
+  endfor
+  let s:shown = next
+  return res
+endfunction
+
+function! s:value_to_dict(value) abort
+  let res = {}
+  for t in a:value.texts
+    let res[t.line] = t.chunks
+  endfor
+  return res
 endfunction
