@@ -1,0 +1,7 @@
+virtualsnip
+Copyright 2021 octaltree
+
+This software contains code derived from vim-vsnip (https://github.com/hrsh7th/vim-vsnip),
+available under MIT (https://github.com/hrsh7th/vim-vsnip/blob/552403842b992efde3816a89b20055f7d66d9a0d/LICENSE).
+This software contains code derived from echodoc.vim (https://github.com/Shougo/echodoc.vim)
+available under MIT (https://github.com/Shougo/echodoc.vim/blob/d02232ff17517f9bc048f0d4a668ef00d57b5f6c/LICENSE)
