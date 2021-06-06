@@ -2,11 +2,6 @@ let g:virtualsnip#events = get(g:, 'virtualsnip#events', ['CompleteDone'])
 
 let s:is_enabled = v:false
 
-let s:virtualsnip_id = 1049
-if exists('*nvim_create_namespace')
-  let s:virtualsnip_id = nvim_create_namespace('virtualsnip')
-endif
-
 function! virtualsnip#enable() abort
   augroup virtualsnip
     autocmd!
@@ -35,13 +30,27 @@ function! virtualsnip#is_enabled() abort
 endfunction
 
 function! s:clear() abort
-  call nvim_buf_clear_namespace(bufnr('%'), s:virtualsnip_id, 0, -1)
+  call virtualsnip#view#refresh({'texts': []})
 endfunction
 
 function! s:on_event(event) abort
-  "let context = get_context()
-  "if empty(context)
-  "  return
-  "endif
-  "echomsg context
+  let world = virtualsnip#view#get_current_buffer_info()
+  if !s:world_is_changed(world)
+    return
+  endif
+  let value = virtualsnip#model#update(world)
+  call virtualsnip#view#refresh(value)
+endfunction
+
+let s:last_world = {}
+function! s:world_is_changed(world) abort
+  if type(a:world) != type({})
+    return v:false
+  end
+  if s:last_world == a:world
+    return v:true
+  else
+    let s:last_world = a:world
+    return v:false
+  endif
 endfunction

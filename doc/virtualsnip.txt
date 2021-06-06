@@ -26,8 +26,8 @@ g:virtualsnip#events				*g:virtualsnip#events*
 
 		Default: ['CompleteDone']
 
-g:virtualsnip#max_line_guard
-						*g:virtualsnip#max_line_guard*
+g:virtualsnip#max_lines
+						*g:virtualsnip#max_lines*
 		The maximux of line guard.
 		If you increase the value, virtualsnip analysis more backward
 		lines.
