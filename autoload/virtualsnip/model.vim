@@ -1,3 +1,5 @@
+let s:Snippet = vsnip#snippet#import()
+
 " Returns new snippets state from view state includes current buffer and cursor pos
 " world: {
 "   lines: [str],
@@ -28,5 +30,8 @@
 "   ]
 " }
 function! virtualsnip#model#update(world) abort
-  echomsg a:world
+  if empty(a:world.sources)
+    return {'texts': []}
+  endif
+  return {'texts': []}
 endfunction

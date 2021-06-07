@@ -2,6 +2,7 @@
 This plugin shows snippets as virtualtext on neovim.
 
 ## Requirements
+* Neovim virtualtext
 * [vim-vsnip](https://github.com/hrsh7th/vim-vsnip)
   - Use it as a library so you don't have to bind keys for snippets
 * Some snippet sources for vim-vsnip
