@@ -3,6 +3,8 @@ if exists('*nvim_create_namespace')
   let s:virtualsnip_id = nvim_create_namespace('virtualsnip')
 endif
 
+let g:virtualsnip#highlight_base = get(g:, 'virtualsnip#highlight_base', ['Comment'])
+
 function! virtualsnip#view#get_current_buffer_info() abort
   let bufnr = bufnr('%')
   let lines_before_cursor = get(g:, 'virtualsnip#lines_before', 3)
@@ -14,6 +16,7 @@ function! virtualsnip#view#get_current_buffer_info() abort
   let sources = vsnip#source#find(bufnr('%'))
   " NOTE: start_line <= cursor_line < start_line + len(lines)
   return {
+        \ 'highlight': {'base': g:virtualsnip#highlight_base},
         \ 'lines': lines,
         \ 'start_line': start_line,
         \ 'cursor_line': cursor_line,

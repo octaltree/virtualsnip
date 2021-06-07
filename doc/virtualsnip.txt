@@ -35,6 +35,11 @@ g:virtualsnip#lines_before
 
 		Default: 3
 
+g:virtualsnip#highlight_base				*g:virtualsnip#highlight_base*
+		Default highlight for virtualtext
+
+		Default: 'Comment'
+
 ------------------------------------------------------------------------------
 FUNCTIONS 					*virtualsnip-functions*
 
