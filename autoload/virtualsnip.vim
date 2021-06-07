@@ -41,8 +41,10 @@ function! s:on_event(event) abort
   " FIXME: Too heavy 500ms
   let world['snippets'] = virtualsnip#model#snippets_from_sources(world.sources)
   call remove(world, 'sources')
-  let value = luaeval("require('virtualsnip').update(_A)", world)
-  call virtualsnip#view#refresh(value)
+  echomsg world
+  "let value = luaeval("require('virtualsnip').update(_A)", world)
+  "echomsg value
+  "call virtualsnip#view#refresh(value)
 endfunction
 
 let s:last_world = {}

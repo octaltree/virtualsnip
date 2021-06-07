@@ -3,7 +3,7 @@ if exists('*nvim_create_namespace')
   let s:virtualsnip_id = nvim_create_namespace('virtualsnip')
 endif
 
-let g:virtualsnip#highlight_base = get(g:, 'virtualsnip#highlight_base', ['Comment'])
+let g:virtualsnip#highlight_base = get(g:, 'virtualsnip#highlight_base', 'Comment')
 
 function! virtualsnip#view#get_current_buffer_info() abort
   let bufnr = bufnr('%')

@@ -12,18 +12,22 @@ lint: vim-lint lua-lint
 
 .PHONY: d
 d:
-	watchexec 'make lint'
+	watchexec 'make lint vim-test'
 
 
 ## Vim {{{
 .PHONY: vim
-vim: vim-lint
+vim: vim-lint vim-test
 
 .PHONY: vim-lint
 vim-lint: tools/py/bin/vint
 	./tools/py/bin/vint --version
 	@./tools/py/bin/vint plugin
 	@./tools/py/bin/vint autoload
+
+.PHONY: vim-test
+vim-test: tools/vim-themis
+	THEMIS_VIM=nvim THEMIS_ARGS="-e --headless" tools/vim-themis/bin/themis tests/*.vim
 # }}}
 
 
@@ -34,7 +38,7 @@ lua: lua-format lua-lint
 # https://github.com/Koihik/LuaFormatter
 .PHONY: lua-format
 lua-format:
-	find lua -name "*.lua"| xargs lua-format -i
+	find lua tests -name "*.lua"| xargs lua-format -i
 
 # https://github.com/mpeterv/luacheck
 .PHONY: lua-lint
@@ -49,7 +53,10 @@ lua-lint:
 
 
 ## Prepare tools {{{
-prepare: tools/py/bin/vint
+prepare: tools/py/bin/vint tools/vim-themis
+
+tools/vim-themis: tools
+	git clone https://github.com/thinca/vim-themis $@
 
 tools/py/bin/vint: tools/py/bin
 	cd tools && ./py/bin/pip install vim-vint

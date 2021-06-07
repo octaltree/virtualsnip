@@ -195,7 +195,7 @@ local function update(world)
             table.insert(texts, {line = l, chunks = chunks})
         end
     end
-    return {texts = {}}
+    return {texts = texts}
 end
 
 return {update = update}
