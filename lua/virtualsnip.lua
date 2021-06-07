@@ -45,12 +45,18 @@ local function find(line, nodes)
     end
     -- first node is text type
     local fs = split(nodes[1].value, '%s')
-    local rest = copy(nodes, 2, -1)
+    local rest = copy(nodes, 2, #nodes)
     local cur = 1
     local hit = 0
-    local num = 0
+    local num
+    do
+        num = 0
+        for _, word in ipairs(fs) do num = num + 1 end
+        for _, n in ipairs(rest) do
+            if n.type == 'text' then num = num + 1 end
+        end
+    end
     for _, word in ipairs(fs) do
-        num = num + 1
         local r = contains(string.sub(line, cur, -1), word)
         if r == nil then return {hit = hit, num = num, num_first = #fs} end
         hit = hit + 1
@@ -58,7 +64,6 @@ local function find(line, nodes)
     end
     for _, n in ipairs(rest) do
         if n.type == 'text' then
-            num = num + 1
             local word = n.value
             local r = contains(string.sub(line, cur, -1), word)
             if r == nil then
@@ -139,7 +144,7 @@ local function match(buf, snippets)
                             k = k + 1
                         end
                     end
-                    nodes_for_this_line = copy(s, j, -1)
+                    nodes_for_this_line = copy(s, j, #s)
                 end
             end
         end
@@ -198,4 +203,4 @@ local function update(world)
     return {texts = texts}
 end
 
-return {update = update}
+return {update = update, match = match, find = find}
