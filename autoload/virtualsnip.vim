@@ -40,7 +40,7 @@ function! s:on_event(event) abort
   endif
   " NOTE: Consider the cost of serialization and deserialization to be
   " 50 vim script function calls.
-  let v = luaeval("require('virtualsnip').model.update(_A)", world)
+  let value = luaeval("require('virtualsnip').model.update(_A)", world)
   call virtualsnip#view#refresh(value)
 endfunction
 
