@@ -33,7 +33,7 @@ end
 local function contains(sentence, words)
     -- TODO: fool
     for i = 1, #sentence - #words + 1 do
-        if string.sub(sentence, i, #words) == words then return i - 1 end
+        if string.sub(sentence, i, i + #words - 1) == words then return i - 1 end
     end
     return nil
 end
@@ -203,4 +203,4 @@ local function update(world)
     return {texts = texts}
 end
 
-return {update = update, match = match, find = find}
+return {update = update, match = match, find = find, contains=contains}
