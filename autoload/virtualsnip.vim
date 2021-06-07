@@ -38,7 +38,9 @@ function! s:on_event(event) abort
   if !s:world_is_changed(world)
     return
   endif
-  let value = virtualsnip#model#update(world)
+  " NOTE: Consider the cost of serialization and deserialization to be
+  " 50 vim script function calls.
+  let v = luaeval("require('virtualsnip').model.update(_A)", world)
   call virtualsnip#view#refresh(value)
 endfunction
 

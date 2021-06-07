@@ -5,14 +5,14 @@ endif
 
 function! virtualsnip#view#get_current_buffer_info() abort
   let bufnr = bufnr('%')
-  let max_lines = get(g:, 'virtualsnip#max_lines', 5)
+  let lines_before_cursor = get(g:, 'virtualsnip#lines_before', 3)
   let cursor_line_no = line('.')
-  let start_line_no = max([1, cursor_line_no - max_lines + 1])
+  let start_line_no = max([1, cursor_line_no - lines_before_cursor])
   let lines = getline(start_line_no, cursor_line_no)
   let start_line = start_line_no - 1
   let cursor_line = cursor_line_no - 1
   let sources = vsnip#source#find(bufnr('%'))
-  " start_line <= cursor_line < start_line + len(lines)
+  " NOTE: start_line <= cursor_line < start_line + len(lines)
   return {
         \ 'lines': lines,
         \ 'start_line': start_line,

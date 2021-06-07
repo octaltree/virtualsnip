@@ -15,7 +15,7 @@
 " snippet: {
 "   body: [str],
 "   description: str,
-"   lael: str,
+"   label: str,
 "   prefix: [str],
 "   prefix_alias: [str],
 " }
@@ -28,5 +28,8 @@
 "   ]
 " }
 function! virtualsnip#model#update(world) abort
-  echomsg a:world
+  if empty(a:world.sources)
+    return {'texts': []}
+  endif
+  return a:world
 endfunction
