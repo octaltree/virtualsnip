@@ -80,7 +80,7 @@ function! s:suite.update() abort
                 value = '\n}'
             }
           }},
-        lines = {'fn main(){', '    if'}
+        lines = {'fn main(){', '    if true {'}
     }
     local function copy(xs, from, to)
         -- lua 5.4 table.unpack
@@ -88,19 +88,19 @@ function! s:suite.update() abort
     end
     num = world.cursor_line - world.start_line + 1
     local before_cursor_inclusive = copy(world.lines, 1, num)
-    found = virtualsnip.find('if', world.snippets[1])
+    found = virtualsnip.find('    if true {', world.snippets[1])
     contained = virtualsnip.contains('    if ', 'if')
+    contained2 = virtualsnip.contains('    if true {\n', ' {\n')
     local matched = virtualsnip.match(before_cursor_inclusive, world.snippets)
     y = virtualsnip.update(world)
 EOF
   call s:assert.equals(luaeval('num'), 2)
-  call s:assert.equals(luaeval('found'), {'num': 3, 'hit': 1, 'num_first': 1})
+  call s:assert.equals(luaeval('found'), {'num': 3, 'hit': 2, 'num_first': 1})
   call s:assert.equals(luaeval('contained'), 4)
+  call s:assert.equals(luaeval('contained2'), 11)
   call s:assert.equals(luaeval('y'), {
         \ 'texts': [
         \   {'line': 2, 'chunks': [['', 'Comment']]},
-        \   {'line': 3, 'chunks': [["condition {\n    unimplemented!();\n}", 'Comment']]}]
+        \   {'line': 3, 'chunks': [["unimplemented!();\n}", 'Comment']]}]
         \})
-
-
 endfunction

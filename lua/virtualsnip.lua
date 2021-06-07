@@ -33,9 +33,17 @@ end
 local function contains(sentence, words)
     -- TODO: fool
     for i = 1, #sentence - #words + 1 do
-        if string.sub(sentence, i, i + #words - 1) == words then return i - 1 end
+        if string.sub(sentence, i, i + #words - 1) == words then
+            return i - 1
+        end
     end
     return nil
+end
+
+local function trim(s)
+    local a = s:match('^%s*()')
+    local b = s:match('()%s*$', a)
+    return s:sub(a, b - 1)
 end
 
 -- return: {num: int, hit: int, num_first}
@@ -44,14 +52,14 @@ local function find(line, nodes)
         return {hit = 0, num = 0, num_first = 0}
     end
     -- first node is text type
-    local fs = split(nodes[1].value, '%s')
+    local fs = split(trim(nodes[1].value), '%s')
     local rest = copy(nodes, 2, #nodes)
     local cur = 1
     local hit = 0
     local num
     do
         num = 0
-        for _, word in ipairs(fs) do num = num + 1 end
+        for _, _ in ipairs(fs) do num = num + 1 end
         for _, n in ipairs(rest) do
             if n.type == 'text' then num = num + 1 end
         end
@@ -64,7 +72,7 @@ local function find(line, nodes)
     end
     for _, n in ipairs(rest) do
         if n.type == 'text' then
-            local word = n.value
+            local word = trim(n.value)
             local r = contains(string.sub(line, cur, -1), word)
             if r == nil then
                 return {hit = hit, num = num, num_first = #fs}
@@ -203,4 +211,4 @@ local function update(world)
     return {texts = texts}
 end
 
-return {update = update, match = match, find = find, contains=contains}
+return {update = update, match = match, find = find, contains = contains}
