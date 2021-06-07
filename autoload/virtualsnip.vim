@@ -30,6 +30,7 @@ function! virtualsnip#is_enabled() abort
 endfunction
 
 function! s:clear() abort
+  " TODO: if the display is delayed, it will appear after clear
   call virtualsnip#view#refresh({'texts': []})
 endfunction
 
