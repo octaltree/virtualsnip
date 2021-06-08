@@ -2,19 +2,23 @@
 This plugin shows snippets as virtualtext on neovim.
 
 ## Requirements
-* Neovim virtualtext and lua
+* Neovim
 * [vim-vsnip](https://github.com/hrsh7th/vim-vsnip)
   - Use it as a library so you don't have to bind keys for snippets
 * Some snippet sources for vim-vsnip
 
 ## Installation
-For dein
+For dein.toml
 ```
-call dein#add('hrsh7th/vim-vsnip')
-call dein#add('octaltree/virtualsnip')
-```
-
-## Config
-```
-let g:virtualsnip#enable_at_startup = 1
+[[plugins]]
+repo = 'hrsh7th/vim-vsnip'
+[[plugins]]
+repo = 'octaltree/virtualsnip'
+build = 'make'
+on_event = 'InsertEnter' # if lazy
+hook_add='''
+let g:virtualsnip#enable_at_startup = v:true
+let g:virtualsnip#sign = ' » '
+let g:virtualsnip#highlight_base = 'Comment'
+'''
 ```
