@@ -26,15 +26,24 @@ g:virtualsnip#events				*g:virtualsnip#events*
 
 		Default: ['CompleteDone']
 
-g:virtualsnip#max_lines
-						*g:virtualsnip#max_lines*
-		The maximux of line guard.
-		If you increase the value, virtualsnip analysis more backward
-		lines.
+g:virtualsnip#lines_before
+						*g:virtualsnip#lines_before*
+		Number of lines before the cursor to be analyzed by virtualsnip.
+		Any integer greater than or equal to 0.
+		If you increase this value, virtualsnip will analyze more backward,
+		but it will slow down vim.
 
-		Note: If you increase the value, it slows your Vim.
+		Default: 3
 
-		Default: 5
+g:virtualsnip#highlight_base				*g:virtualsnip#highlight_base*
+		Default highlight for virtualtext
+
+		Default: 'Comment'
+
+g:virtualsnip#sign				*g:virtualsnip#sign*
+		string to prepend to virtualtext
+
+		Default: ' '
 
 ------------------------------------------------------------------------------
 FUNCTIONS 					*virtualsnip-functions*

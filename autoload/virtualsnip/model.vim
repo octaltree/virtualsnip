@@ -1,32 +1,63 @@
-" Returns new snippets state from view state includes current buffer and cursor pos
-" world: {
-"   lines: [str],
-"   start_line: index,
-"   cursor_line: index,
-"   sources: [
-"     source: [
-"       snippets: [
-"         snippet
-"       ]
-"     ]
+function! s:node(n) abort
+  if a:n.type ==# 'text'
+    return {'type':'text', 'value':a:n.value}
+  elseif a:n.type ==# 'placeholder'
+    let children = []
+    for c in a:n.children
+      call add(children, s:node(c))
+    endfor
+    return {'type':'placeholder', 'children':children}
+  elseif a:n.type ==# 'variable'
+    let children = []
+    for c in a:n.children
+      call add(children, s:node(c))
+    endfor
+    return {'type':'variable', 'children':children}
+  endif
+endfunction
+
+" sources: [{body: [str]}]
+" return: snippets
+" snippets: [
+"   snippet: [
+"     node: placeholder|variable|text
 "   ]
-" } # start_line <= cursor_line < start_line + len(lines)
-" index: int # zero-indexed
-" snippet: {
-"   body: [str],
-"   description: str,
-"   lael: str,
-"   prefix: [str],
-"   prefix_alias: [str],
+" ]
+" placeholder: {
+"   uid: int,
+"   type: 'placeholder',
+"   id: int,
+"   is_final: bool,
+"   follower: bool,
+"   choice: [?],
+"   children: [node]
 " }
-" return: {
-"   texts: [
-"     text: {
-"       line: index,
-"       chunks: [[text:str, hl_group:str]]
-"     }
-"   ]
+" variable: {
+"   uid: int,
+"   type: 'variable',
+"   name: str,
+"   unknown: bool,
+"   resolver: null|{func: f, once: bool}
+"   children: [node]
 " }
-function! virtualsnip#model#update(world) abort
-  echomsg a:world
+" text: {
+"   uid: int,
+"   type: 'text',
+"   value: str,
+"   children: []
+"  }
+function! virtualsnip#model#snippets_from_sources(sources) abort
+  let res = []
+  for snippets in a:sources
+    for snippet in snippets
+      let s = join(snippet.body, '\n')
+      let ast = vsnip#snippet#parser#parse(s)
+      let nodes = []
+      for n in vsnip#snippet#node#create_from_ast(ast)
+        call add(nodes, s:node(n))
+      endfor
+      call add(res, nodes)
+    endfor
+  endfor
+  return res
 endfunction
