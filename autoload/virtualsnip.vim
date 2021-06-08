@@ -30,7 +30,6 @@ function! virtualsnip#is_enabled() abort
 endfunction
 
 function! s:clear() abort
-  echomsg "clear"
   " TODO: if the display is delayed, it will appear after clear
   call virtualsnip#view#refresh({'texts': []})
 endfunction
@@ -45,14 +44,12 @@ function! s:start() abort
 endfunction
 
 function! s:calc(world) abort
-  echomsg "write"
   let sh = virtualsnip#path#core() . ' ' . shellescape(json_encode(a:world))
   let json = system(sh)
   return json_decode(json)
 endfunction
 
 function! s:on_event(event) abort
-  let start = reltime()
   let world = virtualsnip#view#get_current_buffer_info()
   if !s:world_is_changed(world)
     return
@@ -62,7 +59,6 @@ function! s:on_event(event) abort
   call remove(world, 'sources')
   let value = s:calc(world)
   call virtualsnip#view#refresh(value)
-  echomsg reltimestr(reltime(start))
 endfunction
 
 let s:last_world = {}

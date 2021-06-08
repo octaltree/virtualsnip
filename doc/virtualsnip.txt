@@ -40,6 +40,11 @@ g:virtualsnip#highlight_base				*g:virtualsnip#highlight_base*
 
 		Default: 'Comment'
 
+g:virtualsnip#sign				*g:virtualsnip#sign*
+		string to prepend to virtualtext
+
+		Default: ' '
+
 ------------------------------------------------------------------------------
 FUNCTIONS 					*virtualsnip-functions*
 

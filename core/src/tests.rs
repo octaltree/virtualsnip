@@ -112,6 +112,7 @@ async fn can_calc() {
         highlight: Highlight {
             base: "Comment".into()
         },
+        sign: " ".into(),
         start_line: 2,
         cursor_line: 3,
         lines: vec!["fn main(){".into(), "    if a == b {".into()],
@@ -141,19 +142,13 @@ async fn can_calc() {
     assert_eq!(
         y,
         Response {
-            texts: vec![
-                Text {
-                    line: 2,
-                    chunks: vec![(Cow::Borrowed(""), Cow::Borrowed("Comment"))]
-                },
-                Text {
-                    line: 3,
-                    chunks: vec![(
-                        Cow::Borrowed("unimplemented!();\n}"),
-                        Cow::Borrowed("Comment")
-                    )]
-                }
-            ]
+            texts: vec![Text {
+                line: 3,
+                chunks: vec![(
+                    Cow::Borrowed(" unimplemented!();\n}"),
+                    Cow::Borrowed("Comment")
+                )]
+            }]
         }
     );
 }
@@ -167,6 +162,7 @@ async fn can_calc() {
 //            highlight: Highlight {
 //                base: "Comment".into()
 //            },
+// sign: " ".into(),
 //            lines: vec!["fn main() {".into(), "    if true { aaaasd".into()],
 //            start_line: 0,
 //            cursor_line: 1,

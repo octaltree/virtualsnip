@@ -4,6 +4,7 @@ use std::{borrow::Cow, io::Write, ops::Deref};
 #[derive(Debug, Deserialize)]
 pub struct Request {
     highlight: Highlight,
+    sign: String,
     lines: Vec<String>,
     start_line: usize,
     cursor_line: usize,
@@ -56,6 +57,7 @@ pub fn write_response<W: Write>(w: W, resp: &Response<'_>) {
     serde_json::to_writer(w, resp).unwrap()
 }
 
+// TODO: async
 pub async fn calc(req: &Request) -> Response<'_> {
     if req.snippets.is_empty() {
         return Response::default();
@@ -63,23 +65,28 @@ pub async fn calc(req: &Request) -> Response<'_> {
     let num = req.cursor_line - req.start_line + 1;
     let before_cursor_inclusive = &req.lines[..num];
     let matched = r#match(before_cursor_inclusive, &req.snippets);
-    let texts: Vec<_> = (req.start_line..=req.cursor_line)
-        .map(|l| {
-            let i = l - req.start_line;
-            let nodes = matched[i];
-            let chunks = vec![(
-                Cow::Owned(
-                    nodes
-                        .iter()
-                        .map(|n| text(n).to_string())
-                        .collect::<Vec<_>>()
-                        .join("")
-                ),
-                Cow::Borrowed(&req.highlight.base as &str)
-            )];
-            Text { line: l, chunks }
-        })
-        .collect();
+    let mut texts = Vec::new();
+    for l in req.start_line..=req.cursor_line {
+        let i = l - req.start_line;
+        let nodes = matched[i];
+        if nodes.is_empty() {
+            continue;
+        }
+        let chunks = vec![(
+            Cow::Owned(format!(
+                "{}{}",
+                req.sign,
+                nodes
+                    .iter()
+                    .map(|n| text(n).to_string())
+                    .collect::<Vec<_>>()
+                    .join("")
+            )),
+            Cow::Borrowed(&req.highlight.base as &str)
+        )];
+        let text = Text { line: l, chunks };
+        texts.push(text);
+    }
     Response { texts }
 }
 
@@ -92,7 +99,7 @@ fn r#match<'a>(buf: &[String], snippets: &'a [Vec<Node>]) -> Vec<&'a [Node]> {
             let mut max = 0.;
             let mut v = None;
             for (n, f) in snips.iter().zip(founds.iter()) {
-                if f.num == 0 || f.hit == 0 || f.hit == f.num {
+                if f.num == 0 || f.hit == 0 {
                     continue;
                 }
                 let score = f.hit as f64 / f.num as f64;
@@ -120,7 +127,12 @@ fn r#match<'a>(buf: &[String], snippets: &'a [Vec<Node>]) -> Vec<&'a [Node]> {
                             k += 1
                         }
                     }
-                    &s[j..]
+                    let tail = &s[j..];
+                    if tail.iter().all(|n| !n.is_text()) {
+                        &[]
+                    } else {
+                        tail
+                    }
                 }
             } else {
                 &[]
@@ -170,7 +182,10 @@ fn find(line: &str, nodes: &[Node]) -> Found {
     let mut cur = 0;
     for word in fs {
         if let Some(i) = contains(&chars[cur..], word) {
-            hit += 1;
+            // Even if one letter exists, it's unlikely.
+            if word.len() > 1 {
+                hit += 1;
+            }
             cur = i + word.chars().count();
         } else {
             return Found {
