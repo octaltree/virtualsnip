@@ -1,3 +1,4 @@
+pub mod vsnip;
 use serde::{Deserialize, Serialize};
 use std::{borrow::Cow, io::Write, ops::Deref};
 
