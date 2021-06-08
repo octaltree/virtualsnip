@@ -35,6 +35,7 @@ function! virtualsnip#view#refresh(value) abort
   endif
   " TODO: Is it faster to batch rewrite with c than to use vim script to diff and update?
   for action in s:diff(a:value)
+    echomsg action
     if action.op ==# 'delete' || action.op ==# 'update'
       call nvim_buf_clear_namespace(0, s:virtualsnip_id, action.line, action.line)
     endif

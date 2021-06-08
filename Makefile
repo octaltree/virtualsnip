@@ -1,18 +1,47 @@
+.PHONY: build
+build:
+	cd core && cargo build --release
+
 .PHONY: clean
 clean:
+	rm -rf core/target/release
 	rm -rf tools
 
 
 # Development
 .PHONY: dev
-dev: vim lua
+dev: vim lua rust
 
 .PHONY: lint
-lint: vim-lint lua-lint
+lint: vim-lint lua-lint rust-lint
 
 .PHONY: d
 d:
-	watchexec 'make lint vim-test'
+	watchexec 'make r lint vim-test'
+
+## rust {{{
+.PHONY: rust
+rust: rust-fmt rust-lint rust-test rust-doc
+
+.PHONY: r
+r: rust-lint rust-test rust-doc
+
+.PHONY: rust-format
+rust-format:
+	cd core && cargo fmt
+
+.PHONY: rust-lint
+rust-lint:
+	cd core && cargo clippy --all-targets
+
+.PHONY: rust-test
+rust-test:
+	cd core && cargo test --all-targets
+
+.PHONY: rust-doc
+rust-doc:
+	cd core && cargo doc
+#}}}
 
 
 ## Vim {{{
