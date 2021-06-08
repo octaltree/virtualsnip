@@ -3,13 +3,13 @@ function! s:node(n) abort
     return {'type':'text', 'value':a:n.value}
   elseif a:n.type ==# 'placeholder'
     let children = []
-    for c in children
+    for c in a:n.children
       call add(children, s:node(c))
     endfor
     return {'type':'placeholder', 'children':children}
   elseif a:n.type ==# 'variable'
     let children = []
-    for c in children
+    for c in a:n.children
       call add(children, s:node(c))
     endfor
     return {'type':'variable', 'children':children}

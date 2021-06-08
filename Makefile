@@ -21,7 +21,7 @@ d:
 
 ## rust {{{
 .PHONY: rust
-rust: rust-fmt rust-lint rust-test rust-doc
+rust: rust-format rust-lint rust-test rust-doc
 
 .PHONY: r
 r: rust-lint rust-test rust-doc

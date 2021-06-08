@@ -30,6 +30,7 @@ function! virtualsnip#is_enabled() abort
 endfunction
 
 function! s:clear() abort
+  echomsg "clear"
   " TODO: if the display is delayed, it will appear after clear
   call virtualsnip#view#refresh({'texts': []})
 endfunction
@@ -44,6 +45,7 @@ function! s:start() abort
 endfunction
 
 function! s:calc(world) abort
+  echomsg "write"
   let sh = virtualsnip#path#core() . ' ' . shellescape(json_encode(a:world))
   let json = system(sh)
   return json_decode(json)
@@ -58,7 +60,6 @@ function! s:on_event(event) abort
   "" FIXME: Too heavy 200~600ms
   let world['snippets'] = virtualsnip#model#snippets_from_sources(world.sources)
   call remove(world, 'sources')
-  echomsg json_encode(world)
   let value = s:calc(world)
   call virtualsnip#view#refresh(value)
   echomsg reltimestr(reltime(start))
