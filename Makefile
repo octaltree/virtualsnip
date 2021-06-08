@@ -17,7 +17,7 @@ lint: vim-lint rust-lint
 
 .PHONY: d
 d:
-	watchexec 'make r lint
+	watchexec 'make r lint'
 
 ## rust {{{
 .PHONY: rust

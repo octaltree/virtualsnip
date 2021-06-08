@@ -9,7 +9,7 @@ This plugin shows snippets as virtualtext on neovim.
 
 ## Installation
 For dein.toml
-```
+```toml
 [[plugins]]
 repo = 'hrsh7th/vim-vsnip'
 [[plugins]]
