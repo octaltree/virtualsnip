@@ -10,14 +10,14 @@ clean:
 
 # Development
 .PHONY: dev
-dev: vim lua rust
+dev: vim rust
 
 .PHONY: lint
-lint: vim-lint lua-lint rust-lint
+lint: vim-lint rust-lint
 
 .PHONY: d
 d:
-	watchexec 'make r lint vim-test'
+	watchexec 'make r lint
 
 ## rust {{{
 .PHONY: rust
@@ -46,38 +46,13 @@ rust-doc:
 
 ## Vim {{{
 .PHONY: vim
-vim: vim-lint vim-test
+vim: vim-lint
 
 .PHONY: vim-lint
 vim-lint: tools/py/bin/vint
 	./tools/py/bin/vint --version
 	@./tools/py/bin/vint plugin
 	@./tools/py/bin/vint autoload
-
-.PHONY: vim-test
-vim-test: tools/vim-themis
-	THEMIS_VIM=nvim THEMIS_ARGS="-e --headless" tools/vim-themis/bin/themis tests/*.vim
-# }}}
-
-
-## Lua {{{
-.PHONY: lua
-lua: lua-format lua-lint
-
-# https://github.com/Koihik/LuaFormatter
-.PHONY: lua-format
-lua-format:
-	find lua tests -name "*.lua"| xargs lua-format -i
-
-# https://github.com/mpeterv/luacheck
-.PHONY: lua-lint
-lua-lint:
-	@find lua -name "*.lua"| xargs luacheck -q |\
-		sed '/accessing undefined variable \[0m\[1mvim/d' |\
-		sed '/unused argument \[0m\[1m_/d' |\
-		sed '/^$$/d' |\
-		sed 's/\[0m\[31m\[1m[0-9]\+ warnings\[0m//g'|\
-		sed '/^Total:/d'
 # }}}
 
 
