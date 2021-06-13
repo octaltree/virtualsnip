@@ -1,4 +1,5 @@
 pub mod vs_snippet;
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::{borrow::Cow, io::Write, ops::Deref};
 
@@ -64,12 +65,12 @@ pub fn write_response<W: Write>(w: W, resp: &Response<'_>) {
     serde_json::to_writer(w, resp).unwrap()
 }
 
-// TODO: async
-pub async fn calc(req: &Request) -> Response<'_> {
+pub fn calc(req: &Request) -> Response<'_> {
     let snippets: Vec<_> = req
         .sources
         .iter()
         .flat_map(|snippets| snippets.iter())
+        .par_bridge()
         .filter_map(nodes)
         .collect();
     if snippets.is_empty() {
@@ -77,11 +78,10 @@ pub async fn calc(req: &Request) -> Response<'_> {
     }
     let num = req.cursor_line - req.start_line + 1;
     let before_cursor_inclusive = &req.lines[..num];
-    let matched = r#match(before_cursor_inclusive, &snippets);
+    let matched = r#match(req.start_line, before_cursor_inclusive, &snippets);
     let mut texts = Vec::new();
-    for l in req.start_line..=req.cursor_line {
-        let i = l - req.start_line;
-        let nodes = matched[i];
+    for (l, i) in matched {
+        let nodes = l;
         if nodes.is_empty() {
             continue;
         }
@@ -97,7 +97,7 @@ pub async fn calc(req: &Request) -> Response<'_> {
             )),
             Cow::Borrowed(&req.highlight.base as &str)
         )];
-        let text = Text { line: l, chunks };
+        let text = Text { line: i, chunks };
         texts.push(text);
     }
     Response { texts }
@@ -124,57 +124,63 @@ fn node_from_ast(any: vs_snippet::Any<'_>) -> Node {
     }
 }
 
-fn r#match<'a>(buf: &[String], snippets: &'a [Vec<Node>]) -> Vec<&'a [Node]> {
+fn r#match<'a>(
+    start_line: usize,
+    buf: &[String],
+    snippets: &'a [Vec<Node>]
+) -> Vec<(&'a [Node], usize)> {
     let snips: Vec<&[Node]> = snippets.iter().map(Deref::deref).map(first_text).collect();
-    let mut nodes_for_lines = Vec::with_capacity(buf.len());
-    for l in buf {
-        let founds: Vec<_> = snips.iter().map(|nodes| find(l, nodes)).collect();
-        let max: Option<(_, _)> = {
-            let mut max = 0.;
-            let mut v = None;
-            for (n, f) in snips.iter().zip(founds.iter()) {
-                if f.num == 0 || f.hit == 0 {
-                    continue;
-                }
-                let score = f.hit as f64 / f.num as f64;
-                if max < score {
-                    max = score;
-                    v = Some((n, f));
-                }
-            }
-            v
-        };
-        #[allow(clippy::let_and_return)]
-        let nodes_for_this_line = {
-            if let Some((s, f)) = max {
-                if f.hit < f.num_first {
-                    &s
-                } else {
-                    let mut j = s.len();
-                    let mut k = 0;
-                    for i in 1..s.len() {
-                        j = i;
-                        if k >= f.hit - f.num_first {
-                            break;
-                        }
-                        if s[i].is_text() {
-                            k += 1
-                        }
+    buf.iter()
+        .zip(start_line..)
+        .par_bridge()
+        .map(|(l, i)| {
+            let founds: Vec<_> = snips.iter().map(|nodes| find(l, nodes)).collect();
+            let max: Option<(_, _)> = {
+                let mut max = 0.;
+                let mut v = None;
+                for (n, f) in snips.iter().zip(founds.iter()) {
+                    if f.num == 0 || f.hit == 0 {
+                        continue;
                     }
-                    let tail = &s[j..];
-                    if tail.iter().all(|n| !n.is_text()) {
-                        &[]
+                    let score = f.hit as f64 / f.num as f64;
+                    if max < score {
+                        max = score;
+                        v = Some((n, f));
+                    }
+                }
+                v
+            };
+            #[allow(clippy::let_and_return)]
+            let nodes_for_this_line = {
+                if let Some((s, f)) = max {
+                    if f.hit < f.num_first {
+                        &s
                     } else {
-                        tail
+                        let mut j = s.len();
+                        let mut k = 0;
+                        for i in 1..s.len() {
+                            j = i;
+                            if k >= f.hit - f.num_first {
+                                break;
+                            }
+                            if s[i].is_text() {
+                                k += 1
+                            }
+                        }
+                        let tail = &s[j..];
+                        if tail.iter().all(|n| !n.is_text()) {
+                            &[]
+                        } else {
+                            tail
+                        }
                     }
+                } else {
+                    &[]
                 }
-            } else {
-                &[]
-            }
-        };
-        nodes_for_lines.push(nodes_for_this_line);
-    }
-    nodes_for_lines
+            };
+            (nodes_for_this_line, i)
+        })
+        .collect()
 }
 
 fn first_text(nodes: &[Node]) -> &[Node] {

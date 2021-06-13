@@ -88,26 +88,31 @@ fn can_match() {
         }),
     ]];
     let before_cursor_inclusive = &["fn main(){".into(), "    if a == b {".into()];
-    assert_eq!(
-        r#match(before_cursor_inclusive, snippets),
-        vec![
-            vec![],
-            vec![
-                Node::Placeholder(NodePlaceholder {
-                    children: vec![Node::Text(NodeText {
-                        value: "unimplemented!();".into()
-                    })]
-                }),
-                Node::Text(NodeText {
-                    value: "\n}".into()
-                }),
-            ],
-        ]
-    );
+    let ms = r#match(2, before_cursor_inclusive, snippets);
+    assert_eq!(ms.len(), 2);
+    for (ns, l) in ms {
+        match l {
+            2 => assert_eq!(ns, vec![]),
+            3 => assert_eq!(
+                ns,
+                vec![
+                    Node::Placeholder(NodePlaceholder {
+                        children: vec![Node::Text(NodeText {
+                            value: "unimplemented!();".into()
+                        })]
+                    }),
+                    Node::Text(NodeText {
+                        value: "\n}".into()
+                    }),
+                ]
+            ),
+            _ => unreachable!()
+        }
+    }
 }
 
-#[tokio::test]
-async fn can_calc() {
+#[test]
+fn can_calc() {
     let req = Request {
         highlight: Highlight {
             base: "Comment".into()
@@ -204,7 +209,7 @@ async fn can_calc() {
             },
         ]]
     };
-    let y = calc(&req).await;
+    let y = calc(&req);
     assert_eq!(
         y,
         Response {
