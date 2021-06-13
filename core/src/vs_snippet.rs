@@ -30,7 +30,7 @@ use nom::{
 };
 
 #[derive(Debug, PartialEq)]
-pub struct Ast<'a>(Vec<Any<'a>>);
+pub struct Ast<'a>(pub Vec<Any<'a>>);
 
 #[derive(Debug, PartialEq)]
 pub enum Any<'a> {

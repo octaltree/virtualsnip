@@ -53,9 +53,6 @@ function! s:on_event(event) abort
   if !s:world_is_changed(world)
     return
   endif
-  "" FIXME: Too heavy 200~600ms
-  let world['snippets'] = virtualsnip#model#snippets_from_sources(world.sources)
-  call remove(world, 'sources')
   let value = s:calc(world)
   call virtualsnip#view#refresh(value)
 endfunction

@@ -106,52 +106,52 @@ fn can_match() {
     );
 }
 
-#[tokio::test]
-async fn can_calc() {
-    let req = Request {
-        highlight: Highlight {
-            base: "Comment".into()
-        },
-        sign: " ".into(),
-        start_line: 2,
-        cursor_line: 3,
-        lines: vec!["fn main(){".into(), "    if a == b {".into()],
-        snippets: vec![vec![
-            Node::Text(NodeText {
-                value: "if ".into()
-            }),
-            Node::Placeholder(NodePlaceholder {
-                children: vec![Node::Text(NodeText {
-                    value: "condition".into()
-                })]
-            }),
-            Node::Text(NodeText {
-                value: " {\n    ".into()
-            }),
-            Node::Placeholder(NodePlaceholder {
-                children: vec![Node::Text(NodeText {
-                    value: "unimplemented!();".into()
-                })]
-            }),
-            Node::Text(NodeText {
-                value: "\n}".into()
-            }),
-        ]]
-    };
-    let y = calc(&req).await;
-    assert_eq!(
-        y,
-        Response {
-            texts: vec![Text {
-                line: 3,
-                chunks: vec![(
-                    Cow::Borrowed(" unimplemented!();\n}"),
-                    Cow::Borrowed("Comment")
-                )]
-            }]
-        }
-    );
-}
+//#[tokio::test]
+// async fn can_calc() {
+//    let req = Request {
+//        highlight: Highlight {
+//            base: "Comment".into()
+//        },
+//        sign: " ".into(),
+//        start_line: 2,
+//        cursor_line: 3,
+//        lines: vec!["fn main(){".into(), "    if a == b {".into()],
+//        snippets: vec![vec![
+//            Node::Text(NodeText {
+//                value: "if ".into()
+//            }),
+//            Node::Placeholder(NodePlaceholder {
+//                children: vec![Node::Text(NodeText {
+//                    value: "condition".into()
+//                })]
+//            }),
+//            Node::Text(NodeText {
+//                value: " {\n    ".into()
+//            }),
+//            Node::Placeholder(NodePlaceholder {
+//                children: vec![Node::Text(NodeText {
+//                    value: "unimplemented!();".into()
+//                })]
+//            }),
+//            Node::Text(NodeText {
+//                value: "\n}".into()
+//            }),
+//        ]]
+//    };
+//    let y = calc(&req).await;
+//    assert_eq!(
+//        y,
+//        Response {
+//            texts: vec![Text {
+//                line: 3,
+//                chunks: vec![(
+//                    Cow::Borrowed(" unimplemented!();\n}"),
+//                    Cow::Borrowed("Comment")
+//                )]
+//            }]
+//        }
+//    );
+//}
 
 // TODO: escaped "\n"
 //#[tokio::test]
