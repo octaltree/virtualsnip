@@ -1,4 +1,6 @@
-let _ = exists('g:loaded_virtualsnip') && finish
+if exists('g:loaded_virtualsnip')
+  finish
+endif
 let g:loaded_virtualsnip = 1
 
 let g:virtualsnip#root_dir = get(g:, 'virtualsnip#root_dir',
