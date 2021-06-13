@@ -106,52 +106,115 @@ fn can_match() {
     );
 }
 
-//#[tokio::test]
-// async fn can_calc() {
-//    let req = Request {
-//        highlight: Highlight {
-//            base: "Comment".into()
-//        },
-//        sign: " ".into(),
-//        start_line: 2,
-//        cursor_line: 3,
-//        lines: vec!["fn main(){".into(), "    if a == b {".into()],
-//        snippets: vec![vec![
-//            Node::Text(NodeText {
-//                value: "if ".into()
-//            }),
-//            Node::Placeholder(NodePlaceholder {
-//                children: vec![Node::Text(NodeText {
-//                    value: "condition".into()
-//                })]
-//            }),
-//            Node::Text(NodeText {
-//                value: " {\n    ".into()
-//            }),
-//            Node::Placeholder(NodePlaceholder {
-//                children: vec![Node::Text(NodeText {
-//                    value: "unimplemented!();".into()
-//                })]
-//            }),
-//            Node::Text(NodeText {
-//                value: "\n}".into()
-//            }),
-//        ]]
-//    };
-//    let y = calc(&req).await;
-//    assert_eq!(
-//        y,
-//        Response {
-//            texts: vec![Text {
-//                line: 3,
-//                chunks: vec![(
-//                    Cow::Borrowed(" unimplemented!();\n}"),
-//                    Cow::Borrowed("Comment")
-//                )]
-//            }]
-//        }
-//    );
-//}
+#[tokio::test]
+async fn can_calc() {
+    let req = Request {
+        highlight: Highlight {
+            base: "Comment".into()
+        },
+        sign: " ".into(),
+        start_line: 2,
+        cursor_line: 3,
+        lines: vec![
+            "local function foo(a, b)".into(),
+            "    if a == b then".into(),
+        ],
+        sources: vec![vec![
+            Snippet {
+                body: vec![
+                    "f = io.open(${1:\"${2:filename}\"}, \"${3:r}\")\n".into(),
+                    "while true do".into(),
+                    "\tline = f:read()".into(),
+                    "\tif line == nil then break end\n".into(),
+                    "\t${0:--code}".into(),
+                    "end".into(),
+                ]
+            },
+            Snippet {
+                body: vec![
+                    "for i, ${1:x} in pairs(${2:table}) do".into(),
+                    "\t$0".into(),
+                    "end".into(),
+                ]
+            },
+            Snippet {
+                body: vec!["elseif ${1:true} then".into(), "\t$0".into()]
+            },
+            Snippet {
+                body: vec!["while ${1:true} do".into(), "\t$0".into(), "end".into()]
+            },
+            Snippet {
+                body: vec![
+                    "function self:${1:methodName}($2)".into(),
+                    "\t$0".into(),
+                    "end".into(),
+                ]
+            },
+            Snippet {
+                body: vec!["local ${1:var} = require(\"${2:module}\")".into()]
+            },
+            Snippet {
+                body: vec!["require(\"${1:module}\")".into()]
+            },
+            Snippet {
+                body: vec![
+                    "for ${1:i}=${2:1},${3:10} do".into(),
+                    "\t$0".into(),
+                    "end".into(),
+                ]
+            },
+            Snippet {
+                body: vec!["local ${1:varName} = ${0:value}".into()]
+            },
+            Snippet {
+                body: vec!["if ${1:true} then".into(), "\t$0".into(), "end".into()]
+            },
+            Snippet {
+                body: vec![
+                    "function ${1:name}($2)".into(),
+                    "\t${3:-- code}".into(),
+                    "end".into(),
+                ]
+            },
+            Snippet {
+                body: vec!["return $0".into()]
+            },
+            Snippet {
+                body: vec![
+                    "local ${1:name} = function($2)".into(),
+                    "\t${0:-- code}".into(),
+                    "end".into(),
+                ]
+            },
+            Snippet {
+                body: vec![
+                    "${1:className} = {}\n".into(),
+                    "$1.${2:new} = function($3)".into(),
+                    "\tlocal ${4:varName} = ${5:{}}\n".into(),
+                    "\t${6: --code}\n".into(),
+                    "\treturn $4".into(),
+                    "end".into(),
+                ]
+            },
+            Snippet {
+                body: vec!["local ${0}".into()]
+            },
+            Snippet {
+                body: vec!["print(${0})".into()]
+            },
+        ]]
+    };
+    let y = calc(&req).await;
+    assert_eq!(
+        y,
+        Response {
+            texts: vec![Text {
+                line: 3,
+                chunks: vec![(Cow::Borrowed(" \nend"), Cow::Borrowed("Comment"))]
+            }]
+        }
+    );
+}
 
 // TODO: escaped "\n"
 //#[tokio::test]

@@ -69,7 +69,7 @@ pub async fn calc(req: &Request) -> Response<'_> {
     let snippets: Vec<_> = req
         .sources
         .iter()
-        .flat_map(|snippets| snippets.into_iter())
+        .flat_map(|snippets| snippets.iter())
         .filter_map(nodes)
         .collect();
     if snippets.is_empty() {

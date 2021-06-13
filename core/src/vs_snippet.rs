@@ -24,6 +24,7 @@ use nom::{
     bytes::complete::{escaped, escaped_transform, tag, take_while1},
     character::complete::{char, digit1, none_of, one_of},
     combinator::{map, map_res, value},
+    error::ErrorKind,
     multi::{many0, many1, separated_list1},
     sequence::delimited,
     IResult
@@ -71,14 +72,15 @@ pub type Escaped<'a> = &'a str;
 pub type TabStop = usize;
 
 pub fn parse(s: &str) -> Option<Ast<'_>> {
+    // NOTE: if the parser passed to many0 accepts empty inputs (like alpha0 or digit0), many0 will return an error, to prevent going into an infinite loop
     let result = map(many0(any), Ast)(s);
     match result {
         Err(e) => {
-            eprintln!("{}", e);
+            println!("{}", e);
             None
         }
         Ok((rest, _)) if !rest.is_empty() => {
-            eprintln!("trailing {}", rest);
+            println!("trailing {}", rest);
             None
         }
         Ok((_, x)) => Some(x)
@@ -86,7 +88,23 @@ pub fn parse(s: &str) -> Option<Ast<'_>> {
 }
 
 fn any(s: &str) -> IResult<&str, Any<'_>> {
+    if s.is_empty() {
+        return Err(nom::Err::Error(nom::error::Error::new(s, ErrorKind::Eof)));
+    }
     alt((tab_stop_or_var_name, choice, placeholder, variable, text))(s)
+}
+
+fn any_inner_braces(s: &str) -> IResult<&str, Any<'_>> {
+    if s.is_empty() {
+        return Err(nom::Err::Error(nom::error::Error::new(s, ErrorKind::Eof)));
+    }
+    alt((
+        tab_stop_or_var_name,
+        choice,
+        placeholder,
+        variable,
+        text_inner_braces
+    ))(s)
 }
 
 /// $0 || ${0} || $var || ${var}
@@ -164,7 +182,7 @@ fn placeholder(s: &str) -> IResult<&str, Any<'_>> {
         n.parse::<usize>().unwrap()
     })(s)?;
     map(
-        permutation((char(':'), many1(any), char('}'))),
+        permutation((char(':'), many1(any_inner_braces), char('}'))),
         move |(_, children, _): (char, Vec<Any<'_>>, char)| Any::Placeholder(number, children)
     )(rest)
 }
@@ -176,7 +194,7 @@ fn variable(s: &str) -> IResult<&str, Any<'_>> {
         |(_, name): (&str, &str)| name
     )(s)?;
     let a = map(
-        permutation((char(':'), many1(any), char('}'))),
+        permutation((char(':'), many1(any_inner_braces), char('}'))),
         move |(_, children, _): (char, Vec<Any<'_>>, char)| {
             Any::Variable(<&str>::clone(&name), V::Any(children))
         }
@@ -213,7 +231,10 @@ fn options(s: &str) -> IResult<&str, Options<'_>> {
     map(take_while1(|c| c != '}'), Options)(s)
 }
 
-fn formats(s: &str) -> IResult<&str, Vec<Format<'_>>> { many0(format)(s) }
+fn formats(s: &str) -> IResult<&str, Vec<Format<'_>>> {
+    // NOTE: if the parser passed to many0 accepts empty inputs (like alpha0 or digit0), many0 will return an error, to prevent going into an infinite loop
+    many0(format)(s)
+}
 
 /// format      ::= '$' int | '${' int '}'
 ///                | '${' int ':' '/upcase' | '/downcase' | '/capitalize' '}'
@@ -262,6 +283,17 @@ fn format(s: &str) -> IResult<&str, Format<'_>> {
 }
 
 fn text(s: &str) -> IResult<&str, Any<'_>> {
+    map(
+        escaped_transform(
+            none_of(r#"\$"#),
+            '\\',
+            alt((value('\\', char('\\')), value('$', char('$'))))
+        ),
+        Any::Text
+    )(s)
+}
+
+fn text_inner_braces(s: &str) -> IResult<&str, Any<'_>> {
     map(
         escaped_transform(
             none_of(r#"\$}"#),
@@ -320,6 +352,10 @@ mod tests {
                 "",
                 Any::Placeholder(30, vec![Any::Placeholder(3, vec![Any::TabStop(2)])])
             )
+        );
+        assert_eq!(
+            placeholder("${1:true}").unwrap(),
+            ("", Any::Placeholder(1, vec![Any::Text("true".into())]))
         );
     }
 
@@ -389,6 +425,43 @@ mod tests {
     #[test]
     fn can_text() {
         assert_eq!(text(r#"\$2"#), Ok(("", Any::Text(r#"$2"#.into()))));
+        assert_eq!(text(""), Ok(("", Any::Text("".into()))));
+        assert_eq!(text(" = {}\n\n"), Ok(("", Any::Text(" = {}\n\n".into()))));
         assert!(text(r#"$2"#).is_err());
+    }
+
+    #[test]
+    fn can_parse() {
+        assert_eq!(
+            parse("if ${1:true} then\n\t$0\nend"),
+            Some(Ast(vec![
+                Any::Text("if ".into()),
+                Any::Placeholder(1, vec![Any::Text("true".into())]),
+                Any::Text(" then\n\t".into()),
+                Any::TabStop(0),
+                Any::Text("\nend".into())
+            ]))
+        );
+        // this snippet is broken at ${5:{}}
+        let a = parse("${1:className} = {}\n\n$1.${2:new} = function($3)\n\tlocal ${4:varName} = ${5:{}}\n\n\t${6: --code}\n\n\treturn $4\nend");
+        let b = Some(Ast(vec![
+            Any::Placeholder(1, vec![Any::Text("className".into())]),
+            Any::Text(" = {}\n\n".into()),
+            Any::TabStop(1),
+            Any::Text(".".into()),
+            Any::Placeholder(2, vec![Any::Text("new".into())]),
+            Any::Text(" = function(".into()),
+            Any::TabStop(3),
+            Any::Text(")\n\tlocal ".into()),
+            Any::Placeholder(4, vec![Any::Text("varName".into())]),
+            Any::Text(" = ".into()),
+            Any::Placeholder(5, vec![Any::Text("{".into())]),
+            Any::Text("}\n\n\t".into()),
+            Any::Placeholder(6, vec![Any::Text(" --code".into())]),
+            Any::Text("\n\n\treturn ".into()),
+            Any::TabStop(4),
+            Any::Text("\nend".into()),
+        ]));
+        assert_eq!(a, b);
     }
 }
