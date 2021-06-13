@@ -1,3 +1,4 @@
+pub mod vs_snippet;
 use serde::{Deserialize, Serialize};
 use std::{borrow::Cow, io::Write, ops::Deref};
 
@@ -8,7 +9,13 @@ pub struct Request {
     lines: Vec<String>,
     start_line: usize,
     cursor_line: usize,
-    snippets: Vec<Vec<Node>>
+    // snippets: Vec<Vec<Node>>
+    sources: Vec<Vec<Snippet>>
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Snippet {
+    body: Vec<String>
 }
 
 #[derive(Debug, Deserialize)]
@@ -59,12 +66,18 @@ pub fn write_response<W: Write>(w: W, resp: &Response<'_>) {
 
 // TODO: async
 pub async fn calc(req: &Request) -> Response<'_> {
-    if req.snippets.is_empty() {
+    let snippets: Vec<_> = req
+        .sources
+        .iter()
+        .flat_map(|snippets| snippets.iter())
+        .filter_map(nodes)
+        .collect();
+    if snippets.is_empty() {
         return Response::default();
     }
     let num = req.cursor_line - req.start_line + 1;
     let before_cursor_inclusive = &req.lines[..num];
-    let matched = r#match(before_cursor_inclusive, &req.snippets);
+    let matched = r#match(before_cursor_inclusive, &snippets);
     let mut texts = Vec::new();
     for l in req.start_line..=req.cursor_line {
         let i = l - req.start_line;
@@ -88,6 +101,27 @@ pub async fn calc(req: &Request) -> Response<'_> {
         texts.push(text);
     }
     Response { texts }
+}
+
+fn nodes(snip: &Snippet) -> Option<Vec<Node>> {
+    let b = snip.body.join("\n");
+    let ast = vs_snippet::parse(&b)?;
+    Some(ast.0.into_iter().map(node_from_ast).collect())
+}
+
+fn node_from_ast(any: vs_snippet::Any<'_>) -> Node {
+    match any {
+        vs_snippet::Any::TabStop(_) => Node::Placeholder(NodePlaceholder { children: vec![] }),
+        vs_snippet::Any::Placeholder(_, cs) => Node::Placeholder(NodePlaceholder {
+            children: cs.into_iter().map(node_from_ast).collect()
+        }),
+        vs_snippet::Any::Choice(_, _) => Node::Placeholder(NodePlaceholder { children: vec![] }),
+        vs_snippet::Any::Variable(_, vs_snippet::V::Any(cs)) => Node::Variable(NodeVariable {
+            children: cs.into_iter().map(node_from_ast).collect()
+        }),
+        vs_snippet::Any::Variable(_, _) => Node::Variable(NodeVariable { children: vec![] }),
+        vs_snippet::Any::Text(s) => Node::Text(NodeText { value: s })
+    }
 }
 
 fn r#match<'a>(buf: &[String], snippets: &'a [Vec<Node>]) -> Vec<&'a [Node]> {
