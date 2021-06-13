@@ -1,6 +1,5 @@
 # virtualsnip
 This plugin shows snippets as virtualtext on neovim.
-WIP to improve performance
 
 ## Requirements
 * Neovim
