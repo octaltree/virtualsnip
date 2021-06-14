@@ -22,3 +22,4 @@ let g:virtualsnip#sign = ' » '
 let g:virtualsnip#highlight_base = 'Comment'
 '''
 ```
+For other plugin managers, please do the `make` yourself.
