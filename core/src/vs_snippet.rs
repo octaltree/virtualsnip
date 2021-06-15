@@ -442,7 +442,7 @@ mod tests {
                 Any::Text("\nend".into())
             ]))
         );
-        // this snippet is broken at ${5:{}}
+        // XXX: Should be parsed as text without the need for escaping
         let a = parse("${1:className} = {}\n\n$1.${2:new} = function($3)\n\tlocal ${4:varName} = ${5:{}}\n\n\t${6: --code}\n\n\treturn $4\nend");
         let b = Some(Ast(vec![
             Any::Placeholder(1, vec![Any::Text("className".into())]),
@@ -463,5 +463,6 @@ mod tests {
             Any::Text("\nend".into()),
         ]));
         assert_eq!(a, b);
+        dbg!(parse("if (${1:condition}) {\n\t${0}\n}"));
     }
 }

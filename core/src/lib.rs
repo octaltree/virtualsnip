@@ -150,37 +150,42 @@ fn r#match<'a>(
                 }
                 v
             };
-            #[allow(clippy::let_and_return)]
-            let nodes_for_this_line = {
-                if let Some((s, f)) = max {
-                    if f.hit < f.num_first {
-                        &s
-                    } else {
-                        let mut j = s.len();
-                        let mut k = 0;
-                        for i in 1..s.len() {
-                            j = i;
-                            if k >= f.hit - f.num_first {
-                                break;
-                            }
-                            if s[i].is_text() {
-                                k += 1
-                            }
-                        }
-                        let tail = &s[j..];
-                        if tail.iter().all(|n| !n.is_text()) {
-                            &[]
-                        } else {
-                            tail
-                        }
-                    }
-                } else {
-                    &[]
-                }
-            };
+            let nodes_for_this_line = max.map(tail_excluding_matches).unwrap_or_default();
             (nodes_for_this_line, i)
         })
         .collect()
+}
+
+fn tail_excluding_matches<'a, 'b>(found: (&'a &'b [Node], &'a Found)) -> &'b [Node] {
+    let (s, f) = found;
+    if f.hit < f.num_first {
+        return s;
+    }
+    let ns = match s.len() {
+        0 | 1 => return &[],
+        _ => &s[1..]
+    };
+    let matches = f.hit - f.num_first;
+    let idx = {
+        let mut k = 0;
+        let mut m = 0;
+        for (i, n) in ns.iter().enumerate() {
+            if m >= matches {
+                break;
+            }
+            k = i + 1;
+            if n.is_text() {
+                m += 1;
+            }
+        }
+        k
+    };
+    let tail = &ns[idx..];
+    if tail.iter().all(|n| !n.is_text()) {
+        &[]
+    } else {
+        tail
+    }
 }
 
 fn first_text(nodes: &[Node]) -> &[Node] {

@@ -112,6 +112,38 @@ fn can_match() {
 }
 
 #[test]
+fn can_tail_excluding_matches() {
+    use Node::{Placeholder, Text};
+    let a: &[Node] = &[
+        Text(NodeText {
+            value: "if ".into()
+        }),
+        Placeholder(NodePlaceholder {
+            children: vec![Text(NodeText {
+                value: "true".into()
+            })]
+        }),
+        Text(NodeText {
+            value: " then\n\t".into()
+        }),
+        Placeholder(NodePlaceholder { children: vec![] }),
+        Text(NodeText {
+            value: "\nend".into()
+        })
+    ];
+    let x = (
+        &a,
+        &Found {
+            num: 3,
+            hit: 3,
+            num_first: 1
+        }
+    );
+    let y = tail_excluding_matches(x);
+    assert_eq!(y, &[]);
+}
+
+#[test]
 fn can_calc() {
     let req = Request {
         highlight: Highlight {
@@ -219,6 +251,36 @@ fn can_calc() {
             }]
         }
     );
+    // let req = Request {
+    //    highlight: Highlight {
+    //        base: "Comment".into()
+    //    },
+    //    sign: " ".into(),
+    //    start_line: 2,
+    //    cursor_line: 3,
+    //    lines: vec![
+    //        "    for(var link in links){".into(),
+    //        "      if (links.hasOwnProperty(link)){".into(),
+    //    ],
+    //    sources: vec![vec![
+    //        Snippet {
+    //            body: vec!["if (${1:condition}) {\n\t${0}\n}".into()]
+    //        },
+    //        Snippet {
+    //            body: vec!["if (${1:condition}) {\n\t${0}\n} else {\n\t\n}".into()]
+    //        },
+    //    ]]
+    //};
+    // let y = calc(&req);
+    // assert_eq!(
+    //    y,
+    //    Response {
+    //        texts: vec![Text {
+    //            line: 3,
+    //            chunks: vec![(Cow::Borrowed(") {\n\t\n}"), Cow::Borrowed("Comment"))]
+    //        }]
+    //    }
+    //);
 }
 
 // TODO: escaped "\n"
