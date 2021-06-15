@@ -30,6 +30,7 @@ function! virtualsnip#is_enabled() abort
 endfunction
 
 function! s:clear() abort
+  let s:last_world = {}
   call virtualsnip#view#refresh({'texts': []})
 endfunction
 
