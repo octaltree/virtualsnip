@@ -45,6 +45,7 @@ function! virtualsnip#view#refresh(value) abort
       call nvim_buf_set_virtual_text(0, s:virtualsnip_id, action.line, action.chunks, {})
     endif
   endfor
+  redraw!
 endfunction
 
 function! s:value_is_blank(value) abort
