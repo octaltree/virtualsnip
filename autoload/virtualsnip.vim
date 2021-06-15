@@ -63,9 +63,9 @@ function! s:world_is_changed(world) abort
     return v:false
   end
   if s:last_world == a:world
-    return v:true
+    return v:false
   else
     let s:last_world = a:world
-    return v:false
+    return v:true
   endif
 endfunction
