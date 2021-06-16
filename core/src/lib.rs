@@ -1,7 +1,11 @@
 pub mod vs_snippet;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
-use std::{borrow::Cow, io::Write, ops::Deref};
+use std::{
+    borrow::Cow,
+    io::{Read, Write},
+    ops::Deref
+};
 
 #[derive(Debug, Deserialize)]
 pub struct Request {
@@ -59,7 +63,7 @@ struct Text<'a> {
     chunks: Vec<(Cow<'a, str>, Cow<'a, str>)>
 }
 
-pub fn deserialize_request(s: &str) -> Request { serde_json::from_str(s).unwrap() }
+pub fn read_request<R: Read>(r: R) -> Request { serde_json::from_reader(r).unwrap() }
 
 pub fn write_response<W: Write>(w: W, resp: &Response<'_>) {
     serde_json::to_writer(w, resp).unwrap()

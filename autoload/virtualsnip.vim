@@ -44,8 +44,8 @@ function! s:start() abort
 endfunction
 
 function! s:calc(world) abort
-  let sh = virtualsnip#path#core() . ' ' . shellescape(json_encode(a:world))
-  let json = system(sh)
+  let sh = virtualsnip#path#core()
+  let json = system(sh, json_encode(a:world))
   return json_decode(json)
 endfunction
 
