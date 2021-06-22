@@ -460,6 +460,17 @@ mod tests {
             Any::Text("\nend".into()),
         ]));
         assert_eq!(a, b);
-        dbg!(parse("if (${1:condition}) {\n\t${0}\n}"));
+        assert_eq!(
+            parse("if (${1:condition}) {\n\t${0}\n}"),
+            Some(Ast(vec![
+                Any::Text("if (".into()),
+                Any::Placeholder(1, vec![Any::Text("condition".into())]),
+                Any::Text(") {\n\t".into()),
+                Any::TabStop(0),
+                Any::Text("\n}".into()),
+            ]))
+        );
+        // escaping $?
+        dbg!(parse("case \"$${0:VAR}\" in\n\t${1:1}) echo 1\n\t;;\n\t${2:2|3}) echo 2 or 3\n\t;;\n\t*) echo default\n\t;;\nesac\n"));
     }
 }
