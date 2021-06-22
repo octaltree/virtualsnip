@@ -76,13 +76,10 @@ pub fn parse(s: &str) -> Option<Ast<'_>> {
     let result = map(many0(any), Ast)(s);
     match result {
         Err(e) => {
-            println!("{}", e);
+            eprintln!("{}", e);
             None
         }
-        Ok((rest, _)) if !rest.is_empty() => {
-            println!("trailing {}", rest);
-            None
-        }
+        Ok((rest, _)) if !rest.is_empty() => None,
         Ok((_, x)) => Some(x)
     }
 }
