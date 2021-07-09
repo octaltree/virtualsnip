@@ -34,15 +34,6 @@ function! s:clear() abort
   call virtualsnip#view#refresh({'texts': []})
 endfunction
 
-let s:connection = 0
-function! s:start() abort
-  if s:connection
-    return s:connection
-  end
-  let s:connection = jobstart([virtualsnip#path#core()], {'rpc': v:true})
-  return s:connection
-endfunction
-
 function! s:calc(world) abort
   let sh = virtualsnip#path#core()
   let json = system(sh, json_encode(a:world))
