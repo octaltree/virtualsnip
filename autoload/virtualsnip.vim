@@ -42,7 +42,7 @@ endfunction
 
 function! s:on_event(event) abort
   let world = virtualsnip#view#get_current_buffer_info()
-  if !world || !s:world_is_changed(world)
+  if type(world) != type({}) || !s:world_is_changed(world)
     return
   endif
   let value = s:calc(world)
