@@ -14,7 +14,11 @@ function! virtualsnip#view#get_current_buffer_info() abort
   let lines = getline(start_line_no, cursor_line_no)
   let start_line = start_line_no - 1
   let cursor_line = cursor_line_no - 1
-  let sources = vsnip#source#find(bufnr('%'))
+  try
+    let sources = vsnip#source#find(bufnr('%'))
+  catch /E117/
+      return
+  endtry
   " NOTE: start_line <= cursor_line < start_line + len(lines)
   return {
         \ 'highlight': {'base': g:virtualsnip#highlight_base},
